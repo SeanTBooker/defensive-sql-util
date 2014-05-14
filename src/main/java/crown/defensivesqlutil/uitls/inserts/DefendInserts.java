@@ -55,8 +55,8 @@ public class DefendInserts {
 	private int stat_recordCount = 0;
 	
 	public String seekAndReplace(final String lineToReplace) {
-		if(StringUtils.isNotBlank(lineToReplace) && 
-				lineToReplace.toUpperCase().startsWith(INSERT_CONTENT)) {
+		if((StringUtils.isNotBlank(lineToReplace) && 
+			lineToReplace.toUpperCase().startsWith(INSERT_CONTENT))) {
 			final String seekLineToReplace = lineToReplace.toUpperCase();
 			
 			LOG.debug("lineToReplace: " + lineToReplace);
@@ -85,7 +85,8 @@ public class DefendInserts {
 			String valueSectionLineToReplace = lineToReplace.substring(idxOfValues);
 			int idxValuesLeftParentheses = valueSectionLineToReplace.indexOf("(");
 			
-			String extractedValueNames = valueSectionLineToReplace.substring(idxValuesLeftParentheses+1);
+			int idxValuesRightParentheses = valueSectionLineToReplace.lastIndexOf(")");
+			String extractedValueNames = valueSectionLineToReplace.substring(idxValuesLeftParentheses+1, idxValuesRightParentheses);
 			String[] extractedValueNameArray = extractedValueNames.split(",");
 			
 			List<String> correctedDataValueNameList = new ArrayList<String>();
@@ -131,11 +132,14 @@ public class DefendInserts {
 			
 			//Generate SET SQL...
 			int currIdx = 0;
+			replaceBuffer.append("		SET ");
 			for(String currExtractedColumnName : extractedColumnNameArray) {
-				replaceBuffer.append("		SET ");
 				replaceBuffer.append(currExtractedColumnName);
 				replaceBuffer.append(" = ");
 				replaceBuffer.append(correctedDataValueNameList.get(currIdx));
+				if(currIdx < (extractedColumnNameArray.length - 1)) {
+					replaceBuffer.append(", ");
+				}
 				replaceBuffer.append(" \n");
 				currIdx++;
 			}
@@ -172,8 +176,9 @@ public class DefendInserts {
 			} else {
 				//Just add the line to the output file
 				lineOut.append(lineIn);
+				lineOut.append(";\n");
 			}
-			lineOut.append("\n");
+			//lineOut.append("\n");
 		}
 		
 		if(StringUtils.isNotBlank(lineOut.toString())) {
